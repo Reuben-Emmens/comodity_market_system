@@ -16,6 +16,7 @@ class Marketplace {
     // DATA
     std::map<int, Order> orders;
     std::map<std::string, funcPtr> fmap;
+    
 
   public:
     // CREATORS

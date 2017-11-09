@@ -49,12 +49,17 @@ int main()
     }
 
     // Store the remaining words in a vector<string> called params.
-    vector<string> params(words.begin() + 2, words.end());
+    vector<string> params;
+    try {
+      insert(params.end(), words.begin() + 2, words.end());
+    } catch (const length_error& e) {
+      cerr << "ERROR: " << e.what() << endl;
+    }
 
     //cout << " > " << s << endl;
 
-      m.call(dealerId, command, params);
-      cout << "> ";
+    m.call(dealerId, command, params);
+    cout << "> ";
   }
 
   return 0;

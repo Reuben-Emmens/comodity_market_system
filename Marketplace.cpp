@@ -4,9 +4,66 @@
 #include <iostream>
 
 #include "Marketplace.h"
-#include "validate.h"
 
 using namespace std;
+
+namespace {
+
+typedef void(Marketplace::*funcPtr)(const std::string& dealerId,
+                                    const std::vector<std::string>& params);
+
+void validateCommand(const string& command, const map<string, funcPtr>& fmap)
+{
+  if(fmap.find(command) == fmap.end())
+    throw invalid_argument("UNKNOWN_COMMAND " + command);
+}
+
+bool isDouble(const string& s)
+{
+    try {
+        stod(s);
+    }
+    catch(...) {
+        return false;
+    }
+    return true;
+}
+
+bool isInteger(const string& s)
+{
+    try {
+        stoi(s);
+    }
+    catch(...) {
+        return false;
+    }
+    return true;
+}
+
+void validatePost(const vector<string>& params) 
+{
+  vector<string> validCommodities = {"GOLD", "SILV", "PORK", "RICE", "OIL"};
+  if( params[0] != "BUY" and params[0] != "SELL" )
+    throw invalid_argument("INVALID_SIDE");
+  if( find(validCommodities.begin(), validCommodities.end(), params[1]) 
+      == validCommodities.end() )
+    throw invalid_argument("INVALID_COMMODITY");
+  if( !isInteger(params[2]) or stoi(params[2]) < 1 ) 
+    throw invalid_argument("INVALID_AMMOUNT");
+  if( !isDouble(params[3]) or stod(params[3]) < 0.0 )
+    throw invalid_argument("INVALID_PRICE");
+}
+
+void validateRevoke(const vector<string>& params)
+{
+  if(params.size() == 0)
+    throw invalid_argument("NO_ORDER_ID_PROVIDED");
+  if(!isInteger(params[0]) or stoi(params[0]) < 0)
+    throw invalid_argument("INVALID_ORDER_ID");
+}
+
+}
+
 
 // CREATORS
 Marketplace::Marketplace()
@@ -24,7 +81,7 @@ void Marketplace::call(const string&         dealerId,
                        const vector<string>& params)
 {
   try {
-    validateCommand(command)
+    validateCommand(command, fmap);
     funcPtr fp = fmap.at(command);
     return (this->*fp)(dealerId, params);
   } catch (const exception& e) {
@@ -35,7 +92,7 @@ void Marketplace::call(const string&         dealerId,
 void Marketplace::post(const string& dealerId, const vector<string>& params)
 {
 
-  validatePostParameters(params);
+  validatePost(params);
   
   Order o(dealerId, params[0], params[1], stoi(params[2]), stod(params[3])); 
 
@@ -47,7 +104,7 @@ void Marketplace::post(const string& dealerId, const vector<string>& params)
 void Marketplace::revoke(const std::string&              dealerId, 
                          const std::vector<std::string>& params)
 {
-  validateRevokeParameters(params);
+  validateRevoke(params);
 
   int orderId = stoi(params[0]);
   map<int, Order>::const_iterator it = orders.find(orderId);
